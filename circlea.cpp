@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <stdlib.h>
 #include <gsl/gsl_rng.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -21,7 +21,7 @@ int main() {
 		y = gsl_rng_uniform(_gsl_rng);
 		gsl_rng_free(_gsl_rng);
 	
-		double distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+		double distance = sqrt(pow(x, 2) + pow(y, 2));
 		if(distance <= 1) {
 			hits++;
 		}
