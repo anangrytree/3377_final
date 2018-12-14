@@ -16,7 +16,7 @@ int main() {
 	gsl_rng * _gsl_rng = gsl_rng_alloc(gsl_rng_mt19937);
 	srand(time(NULL) ^ getpid());
 	gsl_rng_set(_gsl_rng, rand());
-	for(i = 1; i <= 100; i++) {
+	for(i = 1; i <= 10000; i++) {
 		x = gsl_rng_uniform(_gsl_rng);
 		y = gsl_rng_uniform(_gsl_rng);
 	
