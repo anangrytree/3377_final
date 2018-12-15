@@ -9,6 +9,14 @@
 
 using namespace std;
 
+struct data
+{
+	int trials;
+	int probability;
+	double successRate;
+	double failRate;
+};
+
 int main(int args, char* argv[]) {
 	int opterr = 0, prob, c, trials = 0;
 	char* prob_string;
@@ -42,6 +50,9 @@ int main(int args, char* argv[]) {
 			case ':':
 				if(optopt == 'p') {
 					cerr << "The -p flag must be set with an integer attribute\n";
+					return 0;
+				} else if(optopt == 'o') {
+					cerr << "The -o flag must be set with a filename attribute\n";
 					return 0;
 				}
 				break;
@@ -122,12 +133,15 @@ int main(int args, char* argv[]) {
 	cout << "Success - " << finalSuccess << "%\n";
 	cout << "Failure - " << finalFail << "%\n";
 	
+	struct data trialData;
+	trialData.trials = trials;
+	trialData.successRate = finalSuccess;
+	trialData.failRate = finalFail;
+	trialData.probability = prob;
+
 	ofstream output;
 	output.open(filename, ios::binary | ios::app);
-	output.write((char*)&prob, 4);
-	output.write((char*)&trials, 4);
-	output.write((char*)&finalSuccess, 8);
-	output.write((char*)&finalFail, 8);
+	output.write((char *)&trialData, sizeof(trialData));
 	output.close();
 
 	return 0;
