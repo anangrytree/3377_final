@@ -13,6 +13,13 @@ int main(int args, char* argv[]) {
 		return 0;
 	}
 
+	ifstream file1(argv[1]);
+	if(!file1.is_open()) {
+		cerr << "Input file supplied does not exist" << endl;
+		return 0;
+	}
+	file1.close();
+
 	int p[2];
 	if(pipe(p) == -1)
 		exit(1);
