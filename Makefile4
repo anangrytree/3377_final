@@ -1,0 +1,15 @@
+SRC := $(wildcard *.c)
+OBJ := $(patsubst %.c,%.o,$(SRC))
+CC := g++
+CFLAGS := -O3
+GSL := $$MY_GSL_DIR
+
+signals: signals.o
+	@$(CC) -I$(GSL)/include $(CFLAGS) -lgsl -lgslcblas -o $@ $< -L$(GSL)/lib
+signals.o: signals.cpp
+	@$(CC) -I$(GSL)/include $(CFLAGS) -lgsl -lgslcblas -c $< -L$(GSL)/lib
+clean: neat
+	@$(RM) signals
+	@$(RM) signals.o
+neat:
+	@$(RM) *~ .*~
