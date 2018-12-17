@@ -9,23 +9,26 @@
 
 using namespace std;
 
-pid_t pid = fork();
+pid_t pid = fork(); // fork child
 
+// child handler
 void handler(int signal_num) {
-	cout << "Child received signal " << signal_num << endl;
+	cout << "Child received signal " << signal_num << endl; // output signal received
 }
 
+// parent handler
 void parenthand(int signal_num) {
 	int status;
-	cout << "Parent received signal " << signal_num << endl;
-	kill(pid, SIGKILL);
-	waitpid(pid, &status, 0);
-	cout << "Parent is done and now exiting" << endl;
+	cout << "Parent received signal " << signal_num << endl; // output signal received
+	kill(pid, SIGKILL); // send kill to child
+	waitpid(pid, &status, 0); // wait on child
+	cout << "Parent is done and now exiting" << endl; // parent exiting
 	exit(1);
 }
 
 int main(int args, char* argv[]) {
 	if(pid == 0) { // child	
+		// overwrite signals 1 - 31 inclusive
 		signal(1, handler);
 		signal(2, handler);
 		signal(3, handler);
@@ -59,11 +62,13 @@ int main(int args, char* argv[]) {
 		signal(31, handler);
 
 		struct timespec wt = {0, 500000000L};
-		while(true) {
+		while(true) { // infinite loop
 			cout << "Child waiting" << endl;
-			nanosleep(&wt, NULL);
+			nanosleep(&wt, NULL); // wait for .5 seconds
 		}
 	} else {
+		// parent
+		// overwrite signals 1 - 31 inclusive
 		signal(1, parenthand);
 		signal(2, parenthand);
 		signal(3, parenthand);
@@ -98,17 +103,18 @@ int main(int args, char* argv[]) {
 
 		struct timespec wt = {0, 500000000L};
 	
+		// rng a signal number
 		gsl_rng * _gsl_rng = gsl_rng_alloc(gsl_rng_mt19937);
 		srand(time(NULL) ^ getpid());
 		gsl_rng_set(_gsl_rng, rand());
 
-		sleep(1);
-		while(true) {
+		sleep(1); // sleep one second
+		while(true) { // infinite loop
 			int random = gsl_rng_uniform_int(_gsl_rng, 30);
 			random++;
-			cout << "Sending signal " << random << " to child" << endl;
-			kill(pid, random);
-			nanosleep(&wt, NULL);
+			cout << "Parent sending signal " << random << " to child" << endl; // output signal sent
+			kill(pid, random); // send signal
+			nanosleep(&wt, NULL); // wait half a second
 		}
 		
 		gsl_rng_free(_gsl_rng);

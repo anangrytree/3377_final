@@ -22,8 +22,8 @@ int main(int args, char* argv[]) {
 	char* prob_string;
 	char* trials_string;
 	char* filename;
-	bool probSet = false, verbose = false;
-	while((c = getopt(args, argv, ":p:o:v")) != -1) {
+	bool probSet = false, verbose = false, fileset = false;
+	while((c = getopt(args, argv, ":p:o:v")) != -1) { // parse CLI
 		switch(c) {
 			case 'p':
 				prob_string = optarg;
@@ -34,8 +34,9 @@ int main(int args, char* argv[]) {
 				break;
 			case 'o':
 				filename = optarg;
+				fileset = true;
 				break;
-			case '?':
+			case '?': // CLI requirements not met
 				if(optopt == 'p') {
 					cerr << "The -p flag requires an argument with it" << "\n";
 					return 0;
@@ -47,7 +48,7 @@ int main(int args, char* argv[]) {
 					return 0;
 				}
 				break;
-			case ':':
+			case ':': // CLI error
 				if(optopt == 'p') {
 					cerr << "The -p flag must be set with an integer attribute\n";
 					return 0;
@@ -59,18 +60,19 @@ int main(int args, char* argv[]) {
 		}
 	}
 
-	if(argv[optind] == NULL) {
+	if(argv[optind] == NULL) { // trials not set
 		cerr << "There are one or more issues with your input. Trials must be set as an integer at the end of the command\n";
 		return 0;
 	} else {
 		trials_string = argv[optind];
 	}
 
-	if(!probSet) {
+	if(!probSet) { // probability not set
 		cerr << "There are one or more issues with your input. Probability attribute must be set as an integer with the -p flag preceding it \n";
 		return 0;
 	}
 
+	// check if probability is an integer
 	for(int i = 0; prob_string[i] != '\0'; i++) {
 		if(!isdigit(prob_string[i])) {
 			cerr << "There are one or more issues with your input. Probability attribute must be set as an integer with the -p flag preceding it\n";
@@ -78,6 +80,7 @@ int main(int args, char* argv[]) {
 		}
 	}
 
+	// check if trials is an integer
 	for(int i = 0; trials_string[i] != '\0'; i++) {
 		if(!isdigit(trials_string[i])) {
 			cerr << "There are one or more issues with your input. Trials must be set as an integer at the end of the command\n";
@@ -85,19 +88,23 @@ int main(int args, char* argv[]) {
 		}
 	}
 
+	// convert trials and prob to integers
 	trials = atoi(trials_string);
 	prob = atoi(prob_string);
 
-	if(trials < 0) {
+	// check if trials is within bounds
+	if(trials < 0) { 
 		cerr << "Trials must be a positive integer\n";
 		return 0;
 	}
 
+	// check if prob is within bounds
 	if(prob < 0 || prob > 100) {
 		cerr << "Probability must be between 0 and 100, inclusive" << "\n";
 		return 0;
 	}
 
+	// create an arg that can be passed to execl
 	const char* prob_opt = "-p";
 	char* fstring = new char[strlen(prob_string) + 3];
 	strcpy(fstring, prob_opt);
@@ -108,13 +115,13 @@ int main(int args, char* argv[]) {
 	int success = 0;
 
 	for(int i = 0; i < trials; i++) {
-		pid = fork();
+		pid = fork(); // create child process
 		if(pid == 0) {
-			execl("hand", "hand", fstring, NULL);
+			execl("hand", "hand", fstring, NULL); // execute hand in child
 			exit(0);
 		}
 		pid_t wpid = wait(&status);
-		if(verbose) {
+		if(verbose) { // output each child's results if verbose flag set
 			cout << "PID " << wpid << " returned ";
 			if(status == 0)
 				cout << "success\n";
@@ -125,24 +132,29 @@ int main(int args, char* argv[]) {
 			success++;
 	}
 
+	// calculate final success/failure rates
 	double successRate = 10000 * (success / (double)trials);
 	double finalSuccess = ((int)successRate / 100.0);
 	double finalFail = 100 - finalSuccess;
 
+	// output results
 	cout << "\nCreated " << trials << " processes\n";
 	cout << "Success - " << finalSuccess << "%\n";
 	cout << "Failure - " << finalFail << "%\n";
 	
+	// store results in struct
 	struct data trialData;
 	trialData.trials = trials;
 	trialData.successRate = finalSuccess;
 	trialData.failRate = finalFail;
 	trialData.probability = prob;
 
-	ofstream output;
-	output.open(filename, ios::binary | ios::app);
-	output.write((char *)&trialData, sizeof(trialData));
-	output.close();
-
+	// output struct to output file that was set
+	if(fileset) {
+		ofstream output;
+		output.open(filename, ios::binary | ios::app);
+		output.write((char *)&trialData, sizeof(trialData));
+		output.close();
+	}
 	return 0;
 }
